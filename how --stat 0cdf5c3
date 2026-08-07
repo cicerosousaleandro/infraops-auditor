@@ -1,0 +1,17 @@
+[33mcommit 3efaf490107f29eecd7917389c2ca835a03aa10e[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: Cícero Jorge Leandro de Sousa <cicerosousale@gmail.com>
+Date:   Thu Aug 6 18:08:33 2026 -0300
+
+    Initial project structure
+
+ .gitignore                | 0
+ README.md                 | 0
+ requirements.txt          | 0
+ src/config/__init__.py    | 0
+ src/database/__init__.py  | 0
+ src/inventory/__init__.py | 0
+ src/main.py               | 0
+ src/reports/__init__.py   | 0
+ src/scanner/__init__.py   | 0
+ src/utils/__init__.py     | 0
+ 10 files changed, 0 insertions(+), 0 deletions(-)
