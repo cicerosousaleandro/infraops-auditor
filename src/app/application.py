@@ -3,19 +3,23 @@ Inicialização da aplicação.
 """
 
 from app.menu import Menu
-from scanner.network import NetworkService
+from services.interface_service import InterfaceService
 
 
 class Application:
 
     def run(self) -> None:
 
-        network = NetworkService.get_network_info()
+        interfaces = InterfaceService.get_interfaces()
 
-        print("\nInformações da máquina:")
-        print(f"Hostname: {network.hostname}")
-        print(f"IP: {network.ip_address}")
-        print()
+        print("\nInterfaces encontradas:\n")
+
+        for interface in interfaces:
+            print(f"Nome     : {interface.name}")
+            print(f"IPv4     : {interface.ip_address}")
+            print(f"Máscara  : {interface.netmask}")
+            print(f"Status   : {'Ativa' if interface.is_up else 'Inativa'}")
+            print("-" * 45)
 
         while True:
 
