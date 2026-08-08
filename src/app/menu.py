@@ -40,3 +40,25 @@ class Menu:
             print(f"Máscara  : {interface.netmask}")
 
         print("-" * 50)
+
+    @staticmethod
+    def select_interface(interfaces: list[NetworkInterface]) -> NetworkInterface:
+        """
+        Permite ao usuário escolher uma interface de rede.
+        """
+
+        while True:
+
+            option = input("\nSelecione a interface desejada: ")
+
+            if not option.isdigit():
+                print("\nDigite apenas números.")
+                continue
+
+            index = int(option)
+
+            if index < 1 or index > len(interfaces):
+                print("\nOpção inválida.")
+                continue
+
+            return interfaces[index - 1]
