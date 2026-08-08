@@ -15,7 +15,27 @@ class InterfaceService:
     """
 
     @staticmethod
+    def is_valid_interface(
+        interface: NetworkInterface,
+    ) -> bool:
+        """
+        Verifica se uma interface pode ser utilizada pelo scanner.
+        """
+
+        if not interface.is_up:
+            return False
+
+        if interface.ip_address.startswith("127."):
+            return False
+
+        if interface.ip_address.startswith("169.254."):
+            return False
+
+        return True
+
+    @staticmethod
     def get_interfaces() -> list[NetworkInterface]:
+
         interfaces = []
 
         addresses = psutil.net_if_addrs()
@@ -31,15 +51,17 @@ class InterfaceService:
 
             for address in address_list:
 
-                if address.family == socket.AF_INET:
+                if address.family != socket.AF_INET:
+                    continue
 
-                    interfaces.append(
-                        NetworkInterface(
-                            name=interface_name,
-                            ip_address=address.address,
-                            netmask=address.netmask,
-                            is_up=is_up,
-                        )
-                    )
+                interface = NetworkInterface(
+                    name=interface_name,
+                    ip_address=address.address,
+                    netmask=address.netmask,
+                    is_up=is_up,
+                )
+
+                if InterfaceService.is_valid_interface(interface):
+                    interfaces.append(interface)
 
         return interfaces

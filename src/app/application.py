@@ -7,19 +7,24 @@ from services.interface_service import InterfaceService
 
 
 class Application:
+    """
+    Classe responsável por controlar o fluxo principal da aplicação.
+    """
 
     def run(self) -> None:
+        """
+        Inicia a aplicação.
+        """
 
         interfaces = InterfaceService.get_interfaces()
 
-        print("\nInterfaces encontradas:\n")
+        # ===== DEPURAÇÃO =====
+        print("\n=== DEPURAÇÃO ===")
+        print(f"Quantidade de interfaces encontradas: {len(interfaces)}")
+        print(interfaces)
+        print("=================\n")
 
-        for interface in interfaces:
-            print(f"Nome     : {interface.name}")
-            print(f"IPv4     : {interface.ip_address}")
-            print(f"Máscara  : {interface.netmask}")
-            print(f"Status   : {'Ativa' if interface.is_up else 'Inativa'}")
-            print("-" * 45)
+        Menu.show_interfaces(interfaces)
 
         while True:
 
