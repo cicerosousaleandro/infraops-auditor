@@ -31,11 +31,17 @@ class ScannerService:
             if not hostname:
                 hostname = "Desconhecido"
 
+            mac_address = scanner[host]["addresses"].get(
+                "mac",
+                "Desconhecido"
+            )
+
             devices.append(
                 Device(
                     ip_address=host,
                     hostname=hostname,
-                    status=scanner[host].state()
+                    status=scanner[host].state(),
+                    mac_address=mac_address,
                 )
             )
 

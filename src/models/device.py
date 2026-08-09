@@ -14,3 +14,4 @@ class Device:
     ip_address: str
     hostname: str
     status: str
+    mac_address: str
