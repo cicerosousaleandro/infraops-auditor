@@ -10,11 +10,32 @@
 
 ## Sobre o projeto
 
-O **InfraOps Auditor** é uma ferramenta desenvolvida para automatizar tarefas de auditoria e inventário de redes de computadores.
+O **InfraOps Auditor** é uma ferramenta desenvolvida para automatizar tarefas de auditoria, descoberta de dispositivos e inventário de redes de computadores.
 
-O projeto tem como objetivo identificar dispositivos conectados à rede, organizar essas informações em um inventário, detectar alterações na infraestrutura ao longo do tempo e gerar relatórios técnicos que auxiliem administradores de redes e infraestrutura.
+O projeto nasceu a partir de necessidades reais encontradas no gerenciamento de ambientes corporativos e está sendo desenvolvido de forma incremental, priorizando arquitetura, organização do código e evolução contínua.
 
-Diferente de um simples scanner de rede, a proposta é evoluir para uma plataforma capaz de acompanhar mudanças nos ambientes monitorados, facilitando auditorias e reduzindo tarefas repetitivas.
+A proposta é ir além de um simples scanner de rede, evoluindo para uma plataforma capaz de manter inventários atualizados, detectar alterações na infraestrutura, gerar relatórios técnicos e futuramente integrar monitoramento e recursos voltados para operações de infraestrutura e segurança.
+
+---
+
+## Estado atual do projeto
+
+Atualmente o InfraOps Auditor já é capaz de:
+
+- Descobrir as interfaces de rede da máquina.
+- Permitir a seleção da interface que será utilizada.
+- Calcular automaticamente as informações da rede IPv4.
+- Identificar:
+  - Endereço da rede
+  - Broadcast
+  - Prefixo CIDR
+  - Primeiro host
+  - Último host
+  - Quantidade de hosts utilizáveis
+- Realizar descoberta de dispositivos utilizando Nmap.
+- Exibir os dispositivos encontrados na rede.
+
+Todo o desenvolvimento está sendo realizado passo a passo, com foco em arquitetura e boas práticas, permitindo que a aplicação cresça sem perder organização.
 
 ---
 
@@ -39,26 +60,29 @@ O objetivo é reduzir o tempo gasto em tarefas repetitivas e fornecer uma visão
 
 ### Descoberta de dispositivos
 
-- Descoberta automática de hosts.
-- Identificação de fabricantes (MAC Vendor).
-- Detecção de sistema operacional.
-- Identificação de portas abertas.
-- Identificação de serviços.
+- ✅ Descoberta automática de hosts
+- ✅ Seleção da interface de rede
+- ✅ Cálculo automático da rede IPv4
+- ⏳ Identificação de fabricantes (MAC Vendor)
+- ⏳ Descoberta de hostname
+- ⏳ Detecção de sistema operacional
+- ⏳ Identificação de portas abertas
+- ⏳ Identificação de serviços
 
 ### Inventário
 
-- Cadastro automático de ativos.
-- Histórico de equipamentos.
-- Classificação dos dispositivos.
-- Organização por cliente.
+- Cadastro automático de ativos
+- Histórico de equipamentos
+- Classificação dos dispositivos
+- Organização por cliente
 
 ### Comparação entre auditorias
 
-- Novos dispositivos.
-- Equipamentos removidos.
-- Alteração de IP.
-- Alteração de hostname.
-- Alteração de serviços.
+- Novos dispositivos
+- Equipamentos removidos
+- Alteração de IP
+- Alteração de hostname
+- Alteração de serviços
 
 ### Relatórios
 
@@ -68,9 +92,9 @@ O objetivo é reduzir o tempo gasto em tarefas repetitivas e fornecer uma visão
 
 ### Auditoria de Segurança
 
-- Portas administrativas abertas.
-- Protocolos legados.
-- Verificações básicas de exposição.
+- Portas administrativas abertas
+- Protocolos legados
+- Verificações básicas de exposição
 
 ### Integrações futuras
 
@@ -92,11 +116,14 @@ InfraOps-Auditor
 ├── exports/
 ├── logs/
 ├── src/
+│   ├── app/
 │   ├── config/
 │   ├── database/
 │   ├── inventory/
+│   ├── models/
 │   ├── reports/
 │   ├── scanner/
+│   ├── services/
 │   ├── utils/
 │   └── main.py
 │
@@ -109,12 +136,16 @@ InfraOps-Auditor
 
 ## Tecnologias
 
-- Python
-- Git
-- Nmap
-- SQLite
+### Utilizadas atualmente
 
-Tecnologias previstas para as próximas versões:
+- Python 3.13
+- Nmap
+- python-nmap
+- psutil
+- SQLite
+- Git
+
+### Previstas para as próximas versões
 
 - Netmiko
 - Pandas
@@ -129,43 +160,49 @@ Tecnologias previstas para as próximas versões:
 ### Versão 0.1
 
 - [x] Estrutura inicial do projeto
-- [ ] Menu principal
-- [ ] Módulo de configuração
+- [x] Menu principal
+- [x] Descoberta das interfaces de rede
+- [x] Seleção da interface
+- [x] Cálculo da rede IPv4
+- [x] Descoberta inicial de dispositivos
+- [ ] Organização do inventário
 
 ### Versão 0.2
 
-- [ ] Scanner de rede
+- [ ] Identificação de hostname
+- [ ] Identificação de fabricante (MAC Vendor)
+- [ ] Descoberta de portas
+- [ ] Descoberta de serviços
 
 ### Versão 0.3
 
 - [ ] Banco SQLite
-- [ ] Inventário de ativos
+- [ ] Inventário persistente
+- [ ] Histórico de auditorias
 
 ### Versão 0.4
 
 - [ ] Comparação entre auditorias
+- [ ] Detecção de alterações
 
 ### Versão 0.5
 
 - [ ] Relatórios
+- [ ] Exportação para Excel, CSV e PDF
 
 ### Versão 1.0
 
-- [ ] Primeira versão estável
+- [ ] Plataforma estável para inventário e auditoria de infraestrutura
 
 ---
 
 ## Filosofia do projeto
 
-O desenvolvimento segue alguns princípios fundamentais:
+O InfraOps Auditor está sendo desenvolvido de forma incremental.
 
-- Código limpo.
-- Separação de responsabilidades.
-- Arquitetura modular.
-- Facilidade de manutenção.
-- Evolução contínua.
+Cada funcionalidade é implementada, validada e integrada antes da próxima etapa ser iniciada.
 
-O objetivo é construir uma ferramenta realmente útil para profissionais de infraestrutura, e não apenas um projeto de demonstração.
+Esse processo permite compreender cada decisão arquitetural, manter o código organizado e preparar uma base sólida para futuras funcionalidades, como inventário distribuído, monitoramento, integração com ferramentas de infraestrutura e recursos voltados para segurança da informação.
 
 ---
 
