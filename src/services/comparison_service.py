@@ -15,6 +15,7 @@ class ComparisonResult:
 
     new_devices: list[Device]
     missing_devices: list[Device]
+    returned_devices: list[Device]
     changed_devices: list[Device]
 
 
@@ -27,11 +28,17 @@ class ComparisonService:
     def compare(
         previous_devices: list[Device],
         current_devices: list[Device],
+        historical_devices: list[Device] | None = None,
     ) -> ComparisonResult:
         """
-        Compara os dispositivos da auditoria anterior
-        com os dispositivos da auditoria atual.
+        Compara a auditoria anterior com a auditoria atual.
+
+        O MAC Address é utilizado como identidade principal
+        do dispositivo.
         """
+
+        if historical_devices is None:
+            historical_devices = []
 
         previous_by_mac = {
             device.mac_address: device
@@ -45,14 +52,26 @@ class ComparisonService:
             if device.mac_address != "Desconhecido"
         }
 
+        historical_macs = {
+            device.mac_address
+            for device in historical_devices
+            if device.mac_address != "Desconhecido"
+        }
+
         new_devices = []
+        returned_devices = []
 
         for device in current_devices:
 
             if device.mac_address == "Desconhecido":
                 continue
 
-            if device.mac_address not in previous_by_mac:
+            if device.mac_address in previous_by_mac:
+                continue
+
+            if device.mac_address in historical_macs:
+                returned_devices.append(device)
+            else:
                 new_devices.append(device)
 
         missing_devices = []
@@ -81,11 +100,14 @@ class ComparisonService:
                 != current_device.hostname
                 or previous_device.status
                 != current_device.status
+                or previous_device.manufacturer
+                != current_device.manufacturer
             ):
                 changed_devices.append(current_device)
 
         return ComparisonResult(
             new_devices=new_devices,
             missing_devices=missing_devices,
+            returned_devices=returned_devices,
             changed_devices=changed_devices,
         )

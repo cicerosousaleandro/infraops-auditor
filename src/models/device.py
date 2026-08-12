@@ -15,3 +15,4 @@ class Device:
     hostname: str
     status: str
     mac_address: str
+    manufacturer: str = "Desconhecido"

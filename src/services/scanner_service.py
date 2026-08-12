@@ -15,7 +15,10 @@ class ScannerService:
     """
 
     @staticmethod
-    def _resolve_hostname(ip_address: str, nmap_hostname: str) -> str:
+    def _resolve_hostname(
+        ip_address: str,
+        nmap_hostname: str,
+    ) -> str:
         """
         Tenta resolver o hostname de um dispositivo.
 
@@ -35,6 +38,31 @@ class ScannerService:
             return "Desconhecido"
 
     @staticmethod
+    def _get_manufacturer(
+        host_data,
+        mac_address: str,
+    ) -> str:
+        """
+        Obtém o fabricante do dispositivo através do OUI/MAC
+        identificado pelo Nmap.
+        """
+
+        if mac_address == "Desconhecido":
+            return "Desconhecido"
+
+        vendor_data = host_data.get("vendor", {})
+
+        if not vendor_data:
+            return "Desconhecido"
+
+        manufacturer = vendor_data.get(mac_address)
+
+        if manufacturer:
+            return manufacturer
+
+        return "Desconhecido"
+
+    @staticmethod
     def discover(network: str) -> list[Device]:
         """
         Executa a descoberta de dispositivos na rede.
@@ -44,31 +72,39 @@ class ScannerService:
 
         scanner.scan(
             hosts=network,
-            arguments="-sn"
+            arguments="-sn",
         )
 
         devices = []
 
         for host in scanner.all_hosts():
 
-            nmap_hostname = scanner[host].hostname()
+            host_data = scanner[host]
+
+            nmap_hostname = host_data.hostname()
 
             hostname = ScannerService._resolve_hostname(
                 host,
-                nmap_hostname
+                nmap_hostname,
             )
 
-            mac_address = scanner[host]["addresses"].get(
+            mac_address = host_data["addresses"].get(
                 "mac",
-                "Desconhecido"
+                "Desconhecido",
+            )
+
+            manufacturer = ScannerService._get_manufacturer(
+                host_data,
+                mac_address,
             )
 
             devices.append(
                 Device(
                     ip_address=host,
                     hostname=hostname,
-                    status=scanner[host].state(),
+                    status=host_data.state(),
                     mac_address=mac_address,
+                    manufacturer=manufacturer,
                 )
             )
 

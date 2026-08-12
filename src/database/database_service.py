@@ -21,6 +21,9 @@ class DatabaseService:
     def initialize(cls) -> None:
         """
         Cria o diretório e as tabelas necessárias.
+
+        Também realiza pequenas migrações necessárias
+        quando o banco já existe.
         """
 
         cls.DATABASE_PATH.parent.mkdir(
@@ -49,14 +52,43 @@ class DatabaseService:
                     hostname TEXT NOT NULL,
                     mac_address TEXT NOT NULL,
                     status TEXT NOT NULL,
-
                     FOREIGN KEY (scan_id)
                         REFERENCES scans(id)
                 )
                 """
             )
 
+            cls._migrate_devices_table(connection)
+
             connection.commit()
+
+    @staticmethod
+    def _migrate_devices_table(
+        connection: sqlite3.Connection,
+    ) -> None:
+        """
+        Adiciona novas colunas à tabela devices sem apagar
+        os dados das auditorias existentes.
+        """
+
+        columns = connection.execute(
+            "PRAGMA table_info(devices)"
+        ).fetchall()
+
+        column_names = {
+            column[1]
+            for column in columns
+        }
+
+        if "manufacturer" not in column_names:
+
+            connection.execute(
+                """
+                ALTER TABLE devices
+                ADD COLUMN manufacturer TEXT
+                DEFAULT 'Desconhecido'
+                """
+            )
 
     @classmethod
     def save_scan(
@@ -101,9 +133,10 @@ class DatabaseService:
                         ip_address,
                         hostname,
                         mac_address,
-                        status
+                        status,
+                        manufacturer
                     )
-                    VALUES (?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (
                         scan_id,
@@ -111,6 +144,7 @@ class DatabaseService:
                         device.hostname,
                         device.mac_address,
                         device.status,
+                        device.manufacturer,
                     ),
                 )
 
@@ -132,7 +166,8 @@ class DatabaseService:
                     ip_address,
                     hostname,
                     mac_address,
-                    status
+                    status,
+                    manufacturer
                 FROM devices
                 WHERE scan_id = (
                     SELECT MAX(id)
@@ -150,6 +185,48 @@ class DatabaseService:
                 hostname=row[1],
                 mac_address=row[2],
                 status=row[3],
+                manufacturer=row[4] or "Desconhecido",
+            )
+            for row in rows
+        ]
+
+    @classmethod
+    def get_historical_devices(cls) -> list[Device]:
+        """
+        Recupera dispositivos encontrados em auditorias anteriores.
+
+        A auditoria mais recente é excluída porque já é recuperada
+        separadamente por get_latest_devices().
+        """
+
+        with sqlite3.connect(cls.DATABASE_PATH) as connection:
+
+            cursor = connection.execute(
+                """
+                SELECT
+                    ip_address,
+                    hostname,
+                    mac_address,
+                    status,
+                    manufacturer
+                FROM devices
+                WHERE scan_id < (
+                    SELECT COALESCE(MAX(id), 0)
+                    FROM scans
+                )
+                ORDER BY scan_id DESC, ip_address
+                """
+            )
+
+            rows = cursor.fetchall()
+
+        return [
+            Device(
+                ip_address=row[0],
+                hostname=row[1],
+                mac_address=row[2],
+                status=row[3],
+                manufacturer=row[4] or "Desconhecido",
             )
             for row in rows
         ]

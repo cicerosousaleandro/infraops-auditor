@@ -12,7 +12,8 @@ from services.scanner_service import ScannerService
 
 class Application:
     """
-    Classe responsável por controlar o fluxo principal da aplicação.
+    Classe responsável por controlar o fluxo principal
+    da aplicação.
     """
 
     def run(self) -> None:
@@ -41,10 +42,12 @@ class Application:
 
         print("\nInformações da Rede")
         print("-" * 50)
+
         print(
             f"Rede..............: "
             f"{network.network_address}/{network.prefix_length}"
         )
+
         print(f"Broadcast.........: {network.broadcast_address}")
         print(f"Primeiro Host.....: {network.first_host}")
         print(f"Último Host.......: {network.last_host}")
@@ -57,20 +60,25 @@ class Application:
 
         previous_devices = DatabaseService.get_latest_devices()
 
+        historical_devices = DatabaseService.get_historical_devices()
+
         print("\nIniciando descoberta de dispositivos...")
         print("Aguarde...\n")
 
         devices = ScannerService.discover(network_cidr)
 
-        print(f"Dispositivos encontrados: {len(devices)}\n")
+        print(
+            f"Dispositivos encontrados: {len(devices)}\n"
+        )
 
         for device in devices:
 
             print("-" * 50)
-            print(f"IP       : {device.ip_address}")
-            print(f"Hostname : {device.hostname}")
-            print(f"MAC      : {device.mac_address}")
-            print(f"Status   : {device.status}")
+            print(f"IP           : {device.ip_address}")
+            print(f"Hostname     : {device.hostname}")
+            print(f"MAC          : {device.mac_address}")
+            print(f"Fabricante   : {device.manufacturer}")
+            print(f"Status       : {device.status}")
 
         print("-" * 50)
 
@@ -79,23 +87,29 @@ class Application:
             comparison = ComparisonService.compare(
                 previous_devices=previous_devices,
                 current_devices=devices,
+                historical_devices=historical_devices,
             )
 
             print("\nResultado da comparação")
             print("-" * 50)
 
             print(
-                f"Novos dispositivos......: "
+                f"Novos dispositivos........: "
                 f"{len(comparison.new_devices)}"
             )
 
             print(
-                f"Dispositivos ausentes....: "
+                f"Dispositivos ausentes......: "
                 f"{len(comparison.missing_devices)}"
             )
 
             print(
-                f"Dispositivos alterados...: "
+                f"Dispositivos retornados.....: "
+                f"{len(comparison.returned_devices)}"
+            )
+
+            print(
+                f"Dispositivos alterados......: "
                 f"{len(comparison.changed_devices)}"
             )
 
@@ -106,9 +120,13 @@ class Application:
                 for device in comparison.new_devices:
 
                     print("-" * 50)
-                    print(f"IP       : {device.ip_address}")
-                    print(f"MAC      : {device.mac_address}")
-                    print(f"Hostname : {device.hostname}")
+                    print(f"IP         : {device.ip_address}")
+                    print(f"MAC        : {device.mac_address}")
+                    print(f"Hostname   : {device.hostname}")
+                    print(
+                        f"Fabricante : "
+                        f"{device.manufacturer}"
+                    )
 
             if comparison.missing_devices:
 
@@ -117,9 +135,54 @@ class Application:
                 for device in comparison.missing_devices:
 
                     print("-" * 50)
-                    print(f"IP anterior : {device.ip_address}")
-                    print(f"MAC         : {device.mac_address}")
-                    print(f"Hostname    : {device.hostname}")
+                    print(
+                        f"IP anterior : "
+                        f"{device.ip_address}"
+                    )
+                    print(
+                        f"MAC         : "
+                        f"{device.mac_address}"
+                    )
+                    print(
+                        f"Hostname    : "
+                        f"{device.hostname}"
+                    )
+                    print(
+                        f"Fabricante  : "
+                        f"{device.manufacturer}"
+                    )
+                    print(
+                        f"Status      : "
+                        f"{device.status}"
+                    )
+
+            if comparison.returned_devices:
+
+                print("\nDispositivos retornados:")
+
+                for device in comparison.returned_devices:
+
+                    print("-" * 50)
+                    print(
+                        f"IP atual    : "
+                        f"{device.ip_address}"
+                    )
+                    print(
+                        f"MAC         : "
+                        f"{device.mac_address}"
+                    )
+                    print(
+                        f"Hostname    : "
+                        f"{device.hostname}"
+                    )
+                    print(
+                        f"Fabricante  : "
+                        f"{device.manufacturer}"
+                    )
+                    print(
+                        f"Status      : "
+                        f"{device.status}"
+                    )
 
             if comparison.changed_devices:
 
@@ -127,18 +190,71 @@ class Application:
 
                 for device in comparison.changed_devices:
 
+                    previous_device = next(
+                        (
+                            previous
+                            for previous in previous_devices
+                            if previous.mac_address
+                            == device.mac_address
+                        ),
+                        None,
+                    )
+
                     print("-" * 50)
-                    print(f"IP atual    : {device.ip_address}")
-                    print(f"MAC         : {device.mac_address}")
-                    print(f"Hostname    : {device.hostname}")
-                    print(f"Status      : {device.status}")
+                    print(
+                        f"MAC         : "
+                        f"{device.mac_address}"
+                    )
+
+                    if (
+                        previous_device
+                        and previous_device.ip_address
+                        != device.ip_address
+                    ):
+                        print(
+                            f"IP anterior : "
+                            f"{previous_device.ip_address}"
+                        )
+                        print(
+                            f"IP atual    : "
+                            f"{device.ip_address}"
+                        )
+                        print(
+                            "Alteração   : "
+                            "endereço IP alterado"
+                        )
+
+                    else:
+                        print(
+                            f"IP atual    : "
+                            f"{device.ip_address}"
+                        )
+
+                    print(
+                        f"Hostname    : "
+                        f"{device.hostname}"
+                    )
+                    print(
+                        f"Fabricante  : "
+                        f"{device.manufacturer}"
+                    )
+                    print(
+                        f"Status      : "
+                        f"{device.status}"
+                    )
 
             print("-" * 50)
 
         else:
 
-            print("\nNenhuma auditoria anterior encontrada.")
-            print("Esta será a primeira referência para comparação.")
+            print(
+                "\nNenhuma auditoria anterior encontrada."
+            )
+
+            print(
+                "Esta será a primeira referência "
+                "para comparação."
+            )
 
         scan_id = DatabaseService.save_scan(
             network=network_cidr,
@@ -159,11 +275,13 @@ class Application:
             option = input("\nEscolha uma opção: ")
 
             if option == "0":
+
                 print("\nEncerrando aplicação...")
                 break
 
             print(
-                f"\nA opção '{option}' ainda não foi implementada.\n"
+                f"\nA opção '{option}' "
+                "ainda não foi implementada.\n"
             )
 
             input("Pressione ENTER para continuar...")
