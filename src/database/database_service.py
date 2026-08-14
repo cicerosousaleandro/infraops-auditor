@@ -153,9 +153,13 @@ class DatabaseService:
         return scan_id
 
     @classmethod
-    def get_latest_devices(cls) -> list[Device]:
+    def get_latest_devices(
+        cls,
+        network: str,
+    ) -> list[Device]:
         """
-        Recupera os dispositivos encontrados na última auditoria.
+        Recupera os dispositivos encontrados na última
+        auditoria realizada para uma determinada rede.
         """
 
         with sqlite3.connect(cls.DATABASE_PATH) as connection:
@@ -163,18 +167,22 @@ class DatabaseService:
             cursor = connection.execute(
                 """
                 SELECT
-                    ip_address,
-                    hostname,
-                    mac_address,
-                    status,
-                    manufacturer
-                FROM devices
-                WHERE scan_id = (
+                    d.ip_address,
+                    d.hostname,
+                    d.mac_address,
+                    d.status,
+                    d.manufacturer
+                FROM devices d
+                INNER JOIN scans s
+                    ON d.scan_id = s.id
+                WHERE d.scan_id = (
                     SELECT MAX(id)
                     FROM scans
+                    WHERE network = ?
                 )
-                ORDER BY ip_address
-                """
+                ORDER BY d.ip_address
+                """,
+                (network,),
             )
 
             rows = cursor.fetchall()
@@ -191,12 +199,17 @@ class DatabaseService:
         ]
 
     @classmethod
-    def get_historical_devices(cls) -> list[Device]:
+    def get_historical_devices(
+        cls,
+        network: str,
+    ) -> list[Device]:
         """
-        Recupera dispositivos encontrados em auditorias anteriores.
+        Recupera dispositivos encontrados em auditorias
+        anteriores da mesma rede.
 
-        A auditoria mais recente é excluída porque já é recuperada
-        separadamente por get_latest_devices().
+        A auditoria mais recente dessa rede é excluída
+        porque já é recuperada separadamente por
+        get_latest_devices().
         """
 
         with sqlite3.connect(cls.DATABASE_PATH) as connection:
@@ -204,18 +217,26 @@ class DatabaseService:
             cursor = connection.execute(
                 """
                 SELECT
-                    ip_address,
-                    hostname,
-                    mac_address,
-                    status,
-                    manufacturer
-                FROM devices
-                WHERE scan_id < (
-                    SELECT COALESCE(MAX(id), 0)
-                    FROM scans
-                )
-                ORDER BY scan_id DESC, ip_address
-                """
+                    d.ip_address,
+                    d.hostname,
+                    d.mac_address,
+                    d.status,
+                    d.manufacturer
+                FROM devices d
+                INNER JOIN scans s
+                    ON d.scan_id = s.id
+                WHERE s.network = ?
+                  AND d.scan_id < (
+                      SELECT COALESCE(MAX(id), 0)
+                      FROM scans
+                      WHERE network = ?
+                  )
+                ORDER BY d.scan_id DESC, d.ip_address
+                """,
+                (
+                    network,
+                    network,
+                ),
             )
 
             rows = cursor.fetchall()

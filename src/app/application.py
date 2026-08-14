@@ -58,9 +58,15 @@ class Application:
             f"{network.network_address}/{network.prefix_length}"
         )
 
-        previous_devices = DatabaseService.get_latest_devices()
+        previous_devices = DatabaseService.get_latest_devices(
+            network_cidr
+        )
 
-        historical_devices = DatabaseService.get_historical_devices()
+        historical_devices = (
+            DatabaseService.get_historical_devices(
+                network_cidr
+            )
+        )
 
         print("\nIniciando descoberta de dispositivos...")
         print("Aguarde...\n")
