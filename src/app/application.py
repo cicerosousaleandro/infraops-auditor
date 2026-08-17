@@ -1,7 +1,3 @@
-"""
-Inicialização da aplicação.
-"""
-
 from app.menu import Menu
 from database.database_service import DatabaseService
 from services.comparison_service import ComparisonService
@@ -11,15 +7,8 @@ from services.scanner_service import ScannerService
 
 
 class Application:
-    """
-    Classe responsável por controlar o fluxo principal
-    da aplicação.
-    """
 
     def run(self) -> None:
-        """
-        Inicia a aplicação.
-        """
 
         DatabaseService.initialize()
 
@@ -129,10 +118,7 @@ class Application:
                     print(f"IP         : {device.ip_address}")
                     print(f"MAC        : {device.mac_address}")
                     print(f"Hostname   : {device.hostname}")
-                    print(
-                        f"Fabricante : "
-                        f"{device.manufacturer}"
-                    )
+                    print(f"Fabricante : {device.manufacturer}")
 
             if comparison.missing_devices:
 
@@ -141,26 +127,11 @@ class Application:
                 for device in comparison.missing_devices:
 
                     print("-" * 50)
-                    print(
-                        f"IP anterior : "
-                        f"{device.ip_address}"
-                    )
-                    print(
-                        f"MAC         : "
-                        f"{device.mac_address}"
-                    )
-                    print(
-                        f"Hostname    : "
-                        f"{device.hostname}"
-                    )
-                    print(
-                        f"Fabricante  : "
-                        f"{device.manufacturer}"
-                    )
-                    print(
-                        f"Status      : "
-                        f"{device.status}"
-                    )
+                    print(f"IP anterior : {device.ip_address}")
+                    print(f"MAC         : {device.mac_address}")
+                    print(f"Hostname    : {device.hostname}")
+                    print(f"Fabricante  : {device.manufacturer}")
+                    print(f"Status      : {device.status}")
 
             if comparison.returned_devices:
 
@@ -169,85 +140,76 @@ class Application:
                 for device in comparison.returned_devices:
 
                     print("-" * 50)
-                    print(
-                        f"IP atual    : "
-                        f"{device.ip_address}"
-                    )
-                    print(
-                        f"MAC         : "
-                        f"{device.mac_address}"
-                    )
-                    print(
-                        f"Hostname    : "
-                        f"{device.hostname}"
-                    )
-                    print(
-                        f"Fabricante  : "
-                        f"{device.manufacturer}"
-                    )
-                    print(
-                        f"Status      : "
-                        f"{device.status}"
-                    )
+                    print(f"IP atual    : {device.ip_address}")
+                    print(f"MAC         : {device.mac_address}")
+                    print(f"Hostname    : {device.hostname}")
+                    print(f"Fabricante  : {device.manufacturer}")
+                    print(f"Status      : {device.status}")
 
             if comparison.changed_devices:
 
                 print("\nDispositivos alterados:")
 
-                for device in comparison.changed_devices:
+                for change in comparison.changed_devices:
 
-                    previous_device = next(
-                        (
-                            previous
-                            for previous in previous_devices
-                            if previous.mac_address
-                            == device.mac_address
-                        ),
-                        None,
-                    )
+                    device = change.device
+                    changes = change.changes
 
                     print("-" * 50)
-                    print(
-                        f"MAC         : "
-                        f"{device.mac_address}"
-                    )
+                    print(f"MAC         : {device.mac_address}")
 
-                    if (
-                        previous_device
-                        and previous_device.ip_address
-                        != device.ip_address
-                    ):
-                        print(
-                            f"IP anterior : "
-                            f"{previous_device.ip_address}"
-                        )
-                        print(
-                            f"IP atual    : "
-                            f"{device.ip_address}"
-                        )
-                        print(
-                            "Alteração   : "
-                            "endereço IP alterado"
-                        )
+                    if len(changes) == 1:
+                        print("Alteração   : ", end="")
 
                     else:
-                        print(
-                            f"IP atual    : "
-                            f"{device.ip_address}"
-                        )
+                        print("Alterações  : ", end="")
+
+                    labels = {
+                        "ip_address": "endereço IP",
+                        "hostname": "hostname",
+                        "status": "status",
+                        "manufacturer": "fabricante",
+                    }
 
                     print(
-                        f"Hostname    : "
-                        f"{device.hostname}"
+                        ", ".join(
+                            labels.get(
+                                attribute,
+                                attribute,
+                            )
+                            for attribute in changes
+                        )
                     )
-                    print(
-                        f"Fabricante  : "
-                        f"{device.manufacturer}"
-                    )
-                    print(
-                        f"Status      : "
-                        f"{device.status}"
-                    )
+
+                    print()
+
+                    for attribute, values in changes.items():
+
+                        previous_value, current_value = values
+
+                        labels = {
+                            "ip_address": "IP",
+                            "hostname": "Hostname",
+                            "status": "Status",
+                            "manufacturer": "Fabricante",
+                        }
+
+                        label = labels.get(
+                            attribute,
+                            attribute,
+                        )
+
+                        print(
+                            f"{label} anterior : "
+                            f"{previous_value}"
+                        )
+
+                        print(
+                            f"{label} atual    : "
+                            f"{current_value}"
+                        )
+
+                        print()
 
             print("-" * 50)
 

@@ -1,28 +1,23 @@
-"""
-Serviço responsável por comparar auditorias de rede.
-"""
-
 from dataclasses import dataclass
 
 from models.device import Device
 
 
 @dataclass(slots=True)
-class ComparisonResult:
-    """
-    Representa o resultado da comparação entre duas auditorias.
-    """
+class DeviceChange:
+    device: Device
+    changes: dict[str, tuple[str, str]]
 
+
+@dataclass(slots=True)
+class ComparisonResult:
     new_devices: list[Device]
     missing_devices: list[Device]
     returned_devices: list[Device]
-    changed_devices: list[Device]
+    changed_devices: list[DeviceChange]
 
 
 class ComparisonService:
-    """
-    Responsável por identificar alterações entre auditorias.
-    """
 
     @staticmethod
     def compare(
@@ -30,12 +25,6 @@ class ComparisonService:
         current_devices: list[Device],
         historical_devices: list[Device] | None = None,
     ) -> ComparisonResult:
-        """
-        Compara a auditoria anterior com a auditoria atual.
-
-        O MAC Address é utilizado como identidade principal
-        do dispositivo.
-        """
 
         if historical_devices is None:
             historical_devices = []
@@ -93,17 +82,39 @@ class ComparisonService:
             if previous_device is None:
                 continue
 
-            if (
-                previous_device.ip_address
-                != current_device.ip_address
-                or previous_device.hostname
-                != current_device.hostname
-                or previous_device.status
-                != current_device.status
-                or previous_device.manufacturer
-                != current_device.manufacturer
-            ):
-                changed_devices.append(current_device)
+            changes = {}
+
+            if previous_device.ip_address != current_device.ip_address:
+                changes["ip_address"] = (
+                    previous_device.ip_address,
+                    current_device.ip_address,
+                )
+
+            if previous_device.hostname != current_device.hostname:
+                changes["hostname"] = (
+                    previous_device.hostname,
+                    current_device.hostname,
+                )
+
+            if previous_device.status != current_device.status:
+                changes["status"] = (
+                    previous_device.status,
+                    current_device.status,
+                )
+
+            if previous_device.manufacturer != current_device.manufacturer:
+                changes["manufacturer"] = (
+                    previous_device.manufacturer,
+                    current_device.manufacturer,
+                )
+
+            if changes:
+                changed_devices.append(
+                    DeviceChange(
+                        device=current_device,
+                        changes=changes,
+                    )
+                )
 
         return ComparisonResult(
             new_devices=new_devices,
