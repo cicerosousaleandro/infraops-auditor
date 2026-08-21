@@ -16,3 +16,5 @@ class Device:
     status: str
     mac_address: str
     manufacturer: str = "Desconhecido"
+    dhcp_status: str = "Não encontrado"
+    comment: str = "Sem comentário"

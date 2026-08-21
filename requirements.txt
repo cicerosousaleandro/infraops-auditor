@@ -1,1 +1,3 @@
 librouteros==4.1.1
+psutil
+python-nmap

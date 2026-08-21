@@ -1,33 +1,40 @@
+"""
+Serviço responsável pela comunicação com o MikroTik.
+"""
+
 import librouteros
 
-from src.models.dhcp_lease import DHCPLease
+from config.mikrotik_config import MikroTikConfig
+from models.dhcp_lease import DHCPLease
 
 
 class MikroTikService:
 
-    HOST = "192.168.3.1"
-    PORT = 8728
-    USERNAME = "am3"
-
-    @classmethod
-    def connect(cls, password: str):
+    @staticmethod
+    def connect(config: MikroTikConfig):
 
         return librouteros.connect(
-            host=cls.HOST,
-            port=cls.PORT,
-            username=cls.USERNAME,
-            password=password,
+            host=config.host,
+            port=config.port,
+            username=config.username,
+            password=config.password,
         )
 
     @classmethod
-    def get_identity(cls, password: str) -> str:
+    def get_identity(
+        cls,
+        config: MikroTikConfig,
+    ) -> str:
 
-        api = cls.connect(password)
+        api = cls.connect(config)
 
         try:
 
             identity = tuple(
-                api.path("system", "identity")
+                api.path(
+                    "system",
+                    "identity",
+                )
             )
 
             return identity[0]["name"]
@@ -39,10 +46,10 @@ class MikroTikService:
     @classmethod
     def get_dhcp_leases(
         cls,
-        password: str,
+        config: MikroTikConfig,
     ) -> list[DHCPLease]:
 
-        api = cls.connect(password)
+        api = cls.connect(config)
 
         try:
 
@@ -71,6 +78,10 @@ class MikroTikService:
                     status=lease.get(
                         "status",
                         "Desconhecido",
+                    ),
+                    comment=lease.get(
+                        "comment",
+                        "Sem comentário",
                     ),
                 )
                 for lease in leases

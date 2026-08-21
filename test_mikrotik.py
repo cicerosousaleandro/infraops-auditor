@@ -3,32 +3,39 @@ from getpass import getpass
 from src.services.mikrotik_service import MikroTikService
 
 
-def main():
+def main() -> None:
 
     password = getpass("Senha do MikroTik: ")
 
+    api = MikroTikService.connect(password)
+
     try:
 
-        leases = MikroTikService.get_dhcp_leases(
-            password
+        leases = list(
+            api.path(
+                "ip",
+                "dhcp-server",
+                "lease",
+            )
         )
 
         print()
         print(f"Leases encontrados: {len(leases)}")
 
-        for lease in leases:
+        for index, lease in enumerate(leases, start=1):
 
-            print("-" * 60)
-            print(f"IP       : {lease.ip_address}")
-            print(f"MAC      : {lease.mac_address}")
-            print(f"Hostname : {lease.hostname}")
-            print(f"Status   : {lease.status}")
+            print()
+            print("=" * 60)
+            print(f"LEASE #{index}")
+            print("=" * 60)
 
-    except Exception as error:
+            for key, value in sorted(lease.items()):
 
-        print()
-        print("Falha na consulta DHCP do MikroTik.")
-        print(f"Erro: {error}")
+                print(f"{key:<25}: {value}")
+
+    finally:
+
+        api.close()
 
 
 if __name__ == "__main__":
